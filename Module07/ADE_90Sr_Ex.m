@@ -5,10 +5,10 @@
 clear all; close all;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-dx = 1; % Spatial step in m
-D = 0.1; % Dispersivity of Strontium-90 in aquifer
+dx = 5; % Spatial step in m
+D = 1; % Dispersivity of Strontium-90 in aquifer
 
-Ks =   10; % Saturated hydraulic conductivity in cm/day
+Ks =   5; % Saturated hydraulic conductivity in cm/day
 dhdx = 30; % Regional hydraulic gradient in ft/mi
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -23,13 +23,26 @@ dhdx = dhdx*(1/5280); % A conversion from ft/mi to ft/ft, which is dimensionless
 q = Ks*dhdx;
 
 % Back-calculate dt to maintain stability of the numerical solution
-dt = (1/4)*dx/q;
+dt = dx;
 
-% Calculate the diffusion number
-alpha = D*dt/dx^2;
+flag = 0;
+count = 1;
+while (flag==0)
+
+    % Check for stability and adjust if need be
+    c = q*dt/dx; % Courant condition
+    alpha = D*dt/dx^2; % Diffusion number
+
+    if((c^2 <= 2*alpha)&&((alpha + c/4) <= (1/2)))
+        flag = 1;
+    else
+        dt = dt/2; % Halve the calculated time step
+    end
+    
+    count = count + 1;
+end
 
 % Output Courant condition
-c = q*dt/dx;
 disp(['Courant condition = ',num2str(c)]);
 
 % Output diffusion number
